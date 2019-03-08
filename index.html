@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="meme library | meme and destroy">
+  <meta name="keywords" content="meme,gif,design,fun,game">
+  <meta name="author" content="ambooger">
+	<title>Giffy</title>
+	<link rel="icon" href="assets/images/favicon.ico" type="image/x-icon">
+	<link rel="stylesheet" type="text/css" href="assets/css/style.css">
+</head>
+<body>
+	<div class="btn-wrap">
+		
+	</div>
+	<div class="form-wrap">
+		<form id="search-form">
+			<input type="text" name="search" id="giff-search" required placeholder="search for a giff" />
+			<button id="submit-search">Submit</button>
+		</form>
+	</div>
+	<div class="giff-wrap">
+		
+	</div>
+	<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+	<script type="text/javascript">
+
+		var giffyData = {
+			baseURL: "https://api.giphy.com/v1/gifs/search?&limit=10&q=",
+			apiKey: "&api_key=rVMNxxVunVeZtYDh46SAiQ9kGwVpXMbE",
+			options: ["cat","dog","chicken","fish","monkey"],
+			query: null
+		}
+
+		$(document).ready(function(){
+			createBtnHtml();
+			// step one
+			$('#submit-search').on('click', function(e){
+				
+				e.preventDefault();
+
+				
+				var valid = $('#search-form')[0].checkValidity();
+				var $searchInput = $('#giff-search');
+				
+
+				if(valid && $searchInput.val().trim() !== ""){
+					var userInput = $searchInput.val().trim().toLowerCase();
+					
+					if(!giffyData.options.includes(userInput)){
+						giffyData.options.push(userInput);
+						createBtnHtml();
+					} else {
+						console.log('add a value that you have not already typed.')
+					}
+
+					$searchInput.val('');
+
+				} else {
+					console.log("please input a value");
+					return
+				}
+			});
+
+			// add all the option values to the btn-wrap html element
+			function createBtnHtml(){
+				$('.btn-wrap').empty();
+				for(var i = 0; i<giffyData.options.length;i++){
+					var btn = $('<button>').addClass('option-btn').text(giffyData.options[i]);
+					$('.btn-wrap').append(btn);
+				}
+			}
+
+			$('.btn-wrap').on('click', '.option-btn', function(){
+				giffyData.query = $(this).text();
+				// make a ajax request to the Giffy API for some data.
+				$.get( giffyData.baseURL + giffyData.query + giffyData.apiKey, function(response) {
+					if(response.meta.status === 200) {
+
+						createImgHtml(response.data);
+					}
+				});
+			});
+
+			function createImgHtml(response){
+				$('.giff-wrap').empty();
+
+				for(var i = 0; i<response.length;i++){
+					var imageWrap = $('<div>').addClass('img-wrap');
+
+					var rating = $('<p>').addClass('img-rating').text(response[i].rating);
+
+					var img = $('<img>');
+					img.attr('src', response[i].images.original_still.url);
+					img.attr('alt', response[i].title);
+					img.addClass('giff');
+					img.data('still', response[i].images.original_still.url);
+					img.data('animate', response[i].images.original.url);
+
+					$(imageWrap).append(img, rating);
+
+					$('.giff-wrap').append(imageWrap);
+
+				}
+			}
+
+			$('.giff-wrap').on('click', '.giff', function(){
+				var selectedImg = $(this);
+
+				if(selectedImg.attr('src') === selectedImg.data('still')){
+					// make it animate
+					selectedImg.attr('src', selectedImg.data('animate'));
+				}else {
+					// make it still
+					selectedImg.attr('src', selectedImg.data('still'));
+				}
+			});
+
+		});
+	</script>
+</body>
+</html>
